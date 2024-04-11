@@ -2,8 +2,8 @@
 
 import { storeToRefs } from 'pinia';
 import { ref, reactive, computed } from 'vue';
-// import { useMainStore } from '@/stores/MainStore.js';
-// const MainStore = useMainStore();
+import { useMainStore } from '@/stores/MainStore.js';
+const MainStore = useMainStore();
 
 const props = defineProps({
   topicName: String,
@@ -12,7 +12,7 @@ const props = defineProps({
 
 // both of these methods seem to work to get the reactive current address
 // const { currentAddress } = storeToRefs(MainStore);
-// const currentAddress = computed(() => route.params.address);
+const currentAddress = computed(() => route.params.address);
 
 import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
@@ -24,13 +24,16 @@ const open = computed(() => {
 });
 
 const handleTopicClick = () => {
-  console.log('topic clicked:', props.topicName);
-  if (route.params.topic !== props.topicName) {
+  console.log('topic clicked, props.topicName:', props.topicName, 'currentAddress:', currentAddress);
+  if (!currentAddress.value && route.params.topic == props.topicName) {
+    router.push({ name: 'home' })
+  } else if (currentAddress.value && route.params.topic == props.topicName) {
+    router.push({ name: 'address', params: { address: currentAddress.value } })
+  } else if (currentAddress.value && route.params.topic !== props.topicName) {
+    router.push({ name: 'address-and-topic', params: { address: currentAddress.value, topic: props.topicName } });
+  } else {
     router.push({ name: 'topic', params: { topic: props.topicName } });
   }
-  // } else {
-  //   router.push({ name: 'address-and-topic', params: { address: currentAddress.value, topic: props.topicName } });
-  // }
 }
 
 </script>

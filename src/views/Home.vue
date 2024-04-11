@@ -12,10 +12,19 @@ import { useMainStore } from '@/stores/MainStore.js';
 const MainStore = useMainStore();
 import { useAddressStore } from '@/stores/AddressStore.js';
 const AddressStore = useAddressStore();
+import { useParcelsStore } from '@/stores/ParcelsStore';
+const ParcelsStore = useParcelsStore();
 
 // COMPOSABLES
 import useMapStyle from '@/composables/useMapStyle';
-const { noMapStyle, pwdDrawnMapStyle, dorDrawnMapStyle, imageryMapStyle } = useMapStyle();
+const {
+  noMapStyle,
+  pwdDrawnMapStyle,
+  dorDrawnMapStyle,
+  zoningDrawnMapStyle,
+  imageryMapStyle,
+} = useMapStyle();
+
 import useDataFetch from '@/composables/useDataFetch';
 const { addressDataFetch } = useDataFetch();
 
@@ -35,44 +44,66 @@ onMounted(() => {
     handleAddressSearch();
   }
 
+  let currentTopicMapStyle;
+  if (route.params.topic) {
+    currentTopicMapStyle = topicStyles[route.params.topic];
+  } else {
+    currentTopicMapStyle = pwdDrawnMapStyle;
+  }
+  MapStore.currentTopicMapStyle = currentTopicMapStyle;
+  // map.setStyle(topicStyles[router.params.topic] || pwdDrawnMapStyle);
+
   map = new maplibregl.Map({
     container: 'map',
-    style: pwdDrawnMapStyle,
+    style: currentTopicMapStyle,
     center: [-75.163471, 39.953338],
     zoom: 12,
     minZoom: 6,
-    maxZoom: 17,
+    maxZoom: 22,
   });
+
+  map.on('click', async(e) => {
+    console.log('map click event:', e.lngLat, 'route.params.topic:', route.params.topic);
+    let currentAddress;
+    const parcelLayer = parcelLayerForTopic[route.params.topic];
+    await ParcelsStore.fillParcelDataByLngLat(e.lngLat.lng, e.lngLat.lat, parcelLayer);
+    const addressField = parcelLayer === 'PWD' ? 'ADDRESS' : 'ADDR_SOURCE';
+    currentAddress = ParcelsStore[parcelLayer].properties[addressField];
+    // add the value for the street_address in the MainStore
+    MainStore.setCurrentAddress(currentAddress);
+
+    // set the last search method to mapClick
+    MainStore.setLastSearchMethod('mapClick');
+
+    // if the address is found, push the address to the router
+    if (currentAddress && route.params.topic) {
+      router.push({ name: 'address-and-topic', params: { address: currentAddress, topic: route.params.topic } });
+    } else if (currentAddress) {
+      router.push({ name: 'address-and-topic', params: { address: currentAddress, topic: 'Property' } });
+    }
+  });
+
   addressMarker = new maplibregl.Marker()
     .setLngLat([0, 0])
     .addTo(map);
-  // map.addSource('drawn-base-map', {
-  //   'type': 'raster',
-  //   'tiles': ['https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CityBasemap/MapServer/tile/{z}/{y}/{x}'],
-  //   'tileSize': 256,
-  // });
-  // map.addLayer({
-  //   id: 'drawn-base-map-raster',
-  //   source: 'drawn-base-map',
-  //   type: 'raster',
-  // });
-  // map.addSource('drawn-base-map-labels', {
-  //   'type': 'raster',
-  //   'tiles': ['https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CityBasemap_Labels/MapServer/tile/{z}/{y}/{x}'],
-  //   'tileSize': 256,
-  // });
-  // map.addLayer({
-  //   id: 'drawn-base-map-labels-raster',
-  //   source: 'drawn-base-map-labels',
-  //   type: 'raster',
-  // });
+
 });
+
+const parcelLayerForTopic = {
+  undefined: 'PWD',
+  Property: 'PWD',
+  Deeds: 'DOR',
+  'Licenses & Inspections': 'PWD',
+  Zoning: 'DOR',
+  Voting: 'PWD',
+  'Nearby Activity': 'PWD',
+}
 
 const topicStyles = {
   Property: pwdDrawnMapStyle,
   Deeds: dorDrawnMapStyle,
   'Licenses & Inspections': pwdDrawnMapStyle,
-  Zoning: dorDrawnMapStyle,
+  Zoning: zoningDrawnMapStyle,
   Voting: pwdDrawnMapStyle,
   'Nearby Activity': pwdDrawnMapStyle,
 }
@@ -94,6 +125,17 @@ router.afterEach(async (to, from) => {
     // set the addressDataLoadedFlag value to true
     addressDataLoadedFlag.value = true;
   }
+
+  if (MainStore.lastSearchMethod === 'mapClick') {
+    const parcelLayer = parcelLayerForTopic[to.params.topic];
+    if (parcelLayer === 'PWD') {
+      await ParcelsStore.fillDorParcelDataById();
+    } else {
+      await ParcelsStore.fillPwdParcelDataById();
+    }
+  }
+
+
   if (to.params.address) {
     const coordinates = AddressStore.addressData.features[0].geometry.coordinates;
     map.setCenter(coordinates);
@@ -150,12 +192,15 @@ const handleAddressSearch = async () => {
 
 <template>
   <main>
-    <div class="columns">
+    <div class="columns is-multiline">
       <div id="topic-panel" class="column is-6">
         <!-- TOPIC PANEL ON LEFT -->
-        <div class="column is-6">
-          <div class="columns">
-            <div class="column is-10">
+        <!-- <div class="column is-6"> -->
+          <div class="columns is-multiline">
+            <div class="column is-12">
+              {{ MainStore.currentAddress }}
+            </div>
+            <div class="column is-9">
               <input
                 class="input"
                 type="text"
@@ -170,7 +215,7 @@ const handleAddressSearch = async () => {
               Search
             </button>
           </div>
-        </div>
+        <!-- </div> -->
         <button class="button" @click="toggleImagery">Toggle Imagery</button>
         <topic :topic-name="'Property'" />
         <topic :topic-name="'Deeds'" />

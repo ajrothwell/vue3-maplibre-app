@@ -48,16 +48,16 @@ export default function useMapStyle() {
     version: 8,
     name: 'dorDrawnMap',
     sources: {
-      pwd: {
+      dor: {
         tiles: [
           'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap/MapServer/tile/{z}/{y}/{x}',
         ],
         type: 'raster',
         tileSize: 256,
       },
-      pwdLabels: {
+      dorLabels: {
         tiles: [
-          'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/CityBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
+          'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
         ],
         type: 'raster',
         tileSize: 256,
@@ -65,13 +65,66 @@ export default function useMapStyle() {
     },
     layers: [
       {
-        id: 'pwd',
-        source: 'pwd',
+        id: 'dor',
+        source: 'dor',
         type: 'raster',
       },
       {
-        id: 'pwdLabels',
-        source: 'pwdLabels',
+        id: 'dorLabels',
+        source: 'dorLabels',
+        type: 'raster',
+      },
+    ],
+  };
+
+  const zoningDrawnMapStyle = {
+    version: 8,
+    name: 'dorDrawnMap',
+    sources: {
+      dor: {
+        tiles: [
+          'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap/MapServer/tile/{z}/{y}/{x}',
+        ],
+        type: 'raster',
+        tileSize: 256,
+      },
+      dorLabels: {
+        tiles: [
+          'https://tiles.arcgis.com/tiles/fLeGjb7u4uXqeF9q/arcgis/rest/services/DORBasemap_Labels/MapServer/tile/{z}/{y}/{x}',
+        ],
+        type: 'raster',
+        tileSize: 256,
+      },
+      zoning: {
+        tiles: [
+          'https://citygeo-geocoder-pub.databridge.phila.gov/arcgis/rest/services/Atlas/ZoningMap/MapServer/export?dpi=120\
+            &transparent=true\
+            &format=png32\
+            &bbox={bbox-epsg-3857}\
+            &bboxSR=3857\
+            &imageSR=3857\
+            &size=512,512\
+            &f=image\
+          ',
+        ],
+        type: 'raster',
+        tileSize: 256,
+      }
+    },
+    layers: [
+      {
+        id: 'dor',
+        source: 'dor',
+        type: 'raster',
+      },
+      {
+        id: 'dorLabels',
+        source: 'dorLabels',
+        type: 'raster',
+      },
+      {
+        id: 'zoning',
+        source: 'zoning',
         type: 'raster',
       },
     ],
@@ -96,15 +149,6 @@ export default function useMapStyle() {
         tileSize: 256,
       },
       stormwater: {
-        // 'https://citygeo-geocoder-pub.databridge.phila.gov/arcgis/rest/services/Atlas/ZoningMap/MapServer/export?dpi=120\
-          //   &transparent=true\
-          //   &format=png32\
-          //   &bbox={bbox-epsg-3857}\
-          //   &bboxSR=3857\
-          //   &imageSR=3857\
-          //   &size=512,512\
-          //   &f=image\
-          // ',
         tiles: [
           'https://stormwater.phila.gov/arcgis/rest/services/parcel_viewer/pv_data/MapServer/export?dpi=110\
             &transparent=true\
@@ -131,17 +175,18 @@ export default function useMapStyle() {
         source: 'imageryLabels',
         type: 'raster',
       },
-      {
-        id: 'stormwater',
-        source: 'stormwater',
-        type: 'raster',
-      },
+      // {
+      //   id: 'stormwater',
+      //   source: 'stormwater',
+      //   type: 'raster',
+      // },
     ],
   }
 
   return {
     pwdDrawnMapStyle,
     dorDrawnMapStyle,
+    zoningDrawnMapStyle,
     imageryMapStyle,
   }
 }
