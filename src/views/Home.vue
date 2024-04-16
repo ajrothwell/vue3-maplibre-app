@@ -36,7 +36,7 @@ const route = useRoute();
 const router = useRouter();
 
 let map;
-let addressMarker;
+const currentMarkers = [];
 
 onMounted(() => {
   if (route.params.address) {
@@ -83,10 +83,6 @@ onMounted(() => {
     }
   });
 
-  addressMarker = new maplibregl.Marker()
-    .setLngLat([0, 0])
-    .addTo(map);
-
 });
 
 const parcelLayerForTopic = {
@@ -110,6 +106,8 @@ const topicStyles = {
 
 router.afterEach(async (to, from) => {
   console.log('router.afterEach, to.params.topic:', to.params.topic, 'to.params.address:', to.params.address);
+  currentMarkers.forEach((marker) => marker.remove());
+  
   map.setStyle(topicStyles[to.params.topic]);
   MapStore.currentTopicMapStyle = topicStyles[to.params.topic];
 
@@ -138,9 +136,13 @@ router.afterEach(async (to, from) => {
 
   if (to.params.address) {
     const coordinates = AddressStore.addressData.features[0].geometry.coordinates;
-    map.setCenter(coordinates);
-    
-    addressMarker.setLngLat(coordinates)
+    if (MainStore.lastSearchMethod === 'address') {
+      map.setCenter(coordinates);
+    }
+    const addressMarker = new maplibregl.Marker()
+      .setLngLat(coordinates)
+      .addTo(map);
+    currentMarkers.push(addressMarker);
   }
 })
 
@@ -206,6 +208,7 @@ const handleAddressSearch = async () => {
                 type="text"
                 placeholder="Search an address"
                 v-model="inputAddress"
+                @keydown.enter="handleAddressSearch"
               />
             </div>
             <button
