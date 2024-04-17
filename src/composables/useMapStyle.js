@@ -97,15 +97,27 @@ export default function useMapStyle() {
       },
       zoning: {
         tiles: [
-          'https://citygeo-geocoder-pub.databridge.phila.gov/arcgis/rest/services/Atlas/ZoningMap/MapServer/export?dpi=120\
-            &transparent=true\
-            &format=png32\
-            &bbox={bbox-epsg-3857}\
-            &bboxSR=3857\
-            &imageSR=3857\
-            &size=512,512\
-            &f=image\
-          ',
+          'https://citygeo-geoserver.databridge.phila.gov/geoserver/wms?service=WMS&version=1.1.0&request=GetMap&layers=atlas_zoning_grouped&bbox={bbox-epsg-3857}&width=256&height=256&srs=EPSG%3A3857&styles=&format=image/png&transparent=true'
+          // 'https://citygeo-geoserver.databridge.phila.gov/geoserver/wms?\
+          //   &bbox={bbox-epsg-3857}\
+          //   &format=application/openlayers\
+          //   service=WMS\
+          //   &version=1.1.0\
+          //   &request=GetMap\
+          //   &srs=EPSG%3A3857\
+          //   &transparent=true\
+          //   &width=256\
+          //   &height=256\
+          //   &layers=atlas_zoning_grouped'
+          // 'https://citygeo-geocoder-pub.databridge.phila.gov/arcgis/rest/services/Atlas/ZoningMap/MapServer/export?dpi=120\
+          //   &transparent=true\
+          //   &format=png32\
+          //   &bbox={bbox-epsg-3857}\
+          //   &bboxSR=3857\
+          //   &imageSR=3857\
+          //   &size=512,512\
+          //   &f=image\
+          // ',
         ],
         type: 'raster',
         tileSize: 256,
